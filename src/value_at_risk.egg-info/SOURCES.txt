@@ -1,0 +1,11 @@
+README.md
+pyproject.toml
+src/VaR/__main__.py
+src/VaR/data_processing.py
+src/VaR/interface.py
+src/VaR/model.py
+src/value_at_risk.egg-info/PKG-INFO
+src/value_at_risk.egg-info/SOURCES.txt
+src/value_at_risk.egg-info/dependency_links.txt
+src/value_at_risk.egg-info/requires.txt
+src/value_at_risk.egg-info/top_level.txt

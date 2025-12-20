@@ -3,6 +3,7 @@ name = "value-at-risk"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
+
 requires-python = ">=3.12"
 dependencies = [
     "numpy>=2.3.5",
@@ -13,3 +14,9 @@ dependencies = [
     "pytest>=9.0.2",
     "streamlit>=1.52.2",
 ]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+[tool.setuptools.packages.find]
+where = ["src"]
+

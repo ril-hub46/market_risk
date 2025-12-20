@@ -1,0 +1,14 @@
+.venv/
+*.xlsx
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+data/
+.vscode/
+.env
+.DS_Store
+
+dist/
+build/
+
