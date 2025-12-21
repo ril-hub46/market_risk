@@ -21,9 +21,7 @@ class TestVaREngine:
             }
         )
 
-        df_eur = pd.DataFrame(
-            {"Date": dates, "0.5": [0.010, 0.011], "1.0": [0.015, 0.016]}
-        )
+        df_eur = pd.DataFrame({"Date": dates, "0.5": [0.010, 0.011], "1.0": [0.015, 0.016]})
         return {
             "MAD": df_mad,
             "EUR": df_eur,

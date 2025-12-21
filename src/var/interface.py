@@ -16,9 +16,7 @@ from var.model import (
 
 
 def run_dashboard():
-    st.set_page_config(
-        page_title="Assets Pricing and VaR", page_icon="📊", layout="wide"
-    )
+    st.set_page_config(page_title="Assets Pricing and VaR", page_icon="📊", layout="wide")
 
     if "df_options" not in st.session_state:
         st.session_state.df_options = None
@@ -53,9 +51,7 @@ def run_dashboard():
         "Number of Returns", min_value=50, max_value=5000, value=500, step=50
     )
 
-    tab1, tab2, tab3, tab4 = st.tabs(
-        ["Import Data", "Yield Curves", "VaR Computation", "Export"]
-    )
+    tab1, tab2, tab3, tab4 = st.tabs(["Import Data", "Yield Curves", "VaR Computation", "Export"])
 
     with tab1:
         st.header("Import Portofolio Data")
@@ -73,9 +69,7 @@ def run_dashboard():
                     st.session_state.df_options = pd.read_excel(uploaded_options)
                     st.success("✅ Options imported successfully!")
                     with st.expander("Data Preview"):
-                        st.dataframe(
-                            st.session_state.df_options, use_container_width=True
-                        )
+                        st.dataframe(st.session_state.df_options, use_container_width=True)
                 except Exception as e:
                     st.error(f"Import error: {e}")
 
@@ -242,9 +236,7 @@ def run_dashboard():
                                 st.dataframe(
                                     pd.DataFrame(
                                         {
-                                            "Scenario": range(
-                                                1, min(31, len(pnl_total) + 1)
-                                            ),
+                                            "Scenario": range(1, min(31, len(pnl_total) + 1)),
                                             "P&L (MAD)": pnl_total[:30],
                                         }
                                     ),
@@ -384,9 +376,7 @@ def run_dashboard():
                             fig.update_yaxes(title_text="Frequency", row=1, col=1)
                             fig.update_yaxes(title_text="Frequency", row=1, col=2)
 
-                            fig.update_layout(
-                                height=500, showlegend=False, template="plotly_white"
-                            )
+                            fig.update_layout(height=500, showlegend=False, template="plotly_white")
 
                             st.plotly_chart(fig, use_container_width=True)
 
@@ -414,16 +404,8 @@ def run_dashboard():
                             var, port_returns = compute_historical_var(
                                 df, qty, confidence_level / 100, nb_returns
                             )
-                            returns = (
-                                (df.pct_change().dropna() * qty)
-                                .sum(axis=1)
-                                .tail(nb_returns)
-                            )
-                            var = abs(
-                                np.percentile(
-                                    returns, (1 - confidence_level / 100) * 100
-                                )
-                            )
+                            returns = (df.pct_change().dropna() * qty).sum(axis=1).tail(nb_returns)
+                            var = abs(np.percentile(returns, (1 - confidence_level / 100) * 100))
 
                             st.session_state.last_var_results = {
                                 "var_histo": var,
@@ -488,27 +470,16 @@ def run_dashboard():
                     with pd.ExcelWriter(output, engine="openpyxl") as writer:
                         if st.session_state.last_calc_type == "options":
                             pd.DataFrame(
-                                {
-                                    "VaR": [
-                                        st.session_state.last_var_results["var_value"]
-                                    ]
-                                }
+                                {"VaR": [st.session_state.last_var_results["var_value"]]}
                             ).to_excel(writer, index=False, sheet_name="Summary")
 
                             pd.DataFrame(
                                 {
                                     "Scenario": range(
                                         1,
-                                        len(
-                                            st.session_state.last_var_results[
-                                                "pnl_total"
-                                            ]
-                                        )
-                                        + 1,
+                                        len(st.session_state.last_var_results["pnl_total"]) + 1,
                                     ),
-                                    "Simulated P&L": st.session_state.last_var_results[
-                                        "pnl_total"
-                                    ],
+                                    "Simulated P&L": st.session_state.last_var_results["pnl_total"],
                                 }
                             ).to_excel(writer, index=False, sheet_name="Simulated P&L")
 
@@ -518,9 +489,7 @@ def run_dashboard():
                                     "VaR Cornish-Fisher": [
                                         st.session_state.last_var_results["var_cf"]
                                     ],
-                                    "VaR GBM": [
-                                        st.session_state.last_var_results["var_gbm"]
-                                    ],
+                                    "VaR GBM": [st.session_state.last_var_results["var_gbm"]],
                                 }
                             ).to_excel(writer, index=False, sheet_name="Summary")
 
@@ -538,17 +507,11 @@ def run_dashboard():
                                         "sim_porto"
                                     ]
                                 }
-                            ).to_excel(
-                                writer, index=True, sheet_name="Simulated Returns"
-                            )
+                            ).to_excel(writer, index=True, sheet_name="Simulated Returns")
 
                         else:  # funds
                             pd.DataFrame(
-                                {
-                                    "Historical VaR": [
-                                        st.session_state.last_var_results["var_histo"]
-                                    ]
-                                }
+                                {"Historical VaR": [st.session_state.last_var_results["var_histo"]]}
                             ).to_excel(writer, index=False, sheet_name="Summary")
 
                             pd.DataFrame(

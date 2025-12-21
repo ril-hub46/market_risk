@@ -9,13 +9,9 @@ class TestRateCalculations:
         """Génère un dictionnaire de courbes fictives pour les tests."""
         dates = pd.to_datetime(["2024-01-01", "2024-01-05"])
         # Création d'une courbe MAD simple
-        df_mad = pd.DataFrame(
-            {"Date": dates, "0.5": [0.03, 0.035], "1.0": [0.04, 0.045]}
-        )
+        df_mad = pd.DataFrame({"Date": dates, "0.5": [0.03, 0.035], "1.0": [0.04, 0.045]})
         # Création d'une courbe EUR simple
-        df_eur = pd.DataFrame(
-            {"Date": dates, "0.5": [0.01, 0.012], "1.0": [0.02, 0.022]}
-        )
+        df_eur = pd.DataFrame({"Date": dates, "0.5": [0.01, 0.012], "1.0": [0.02, 0.022]})
         return {"MAD": df_mad, "EUR": df_eur}
 
     def test_find_nearest_date_exact(self, mock_market_data):

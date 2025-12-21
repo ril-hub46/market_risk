@@ -52,26 +52,20 @@ def compute_var(data, date, var_confidence, n_simulations, dic):
 
     Z = np.random.normal(0, 1, (1, n_simulations))
 
-    S_future = S0 * np.exp(
-        (rds - rfs - 0.5 * sigma**2) * delta_t + sigma * np.sqrt(delta_t) * Z
-    )
+    S_future = S0 * np.exp((rds - rfs - 0.5 * sigma**2) * delta_t + sigma * np.sqrt(delta_t) * Z)
 
     d1_init = (np.log(S0 / K) + (rds - rfs + 0.5 * sigma**2) * T) / (sigma * np.sqrt(T))
     d2_init = d1_init - sigma * np.sqrt(T)
 
-    d1_future = (np.log(S_future / K) + (rds - rfs + 0.5 * sigma**2) * T) / (
-        sigma * np.sqrt(T)
-    )
+    d1_future = (np.log(S_future / K) + (rds - rfs + 0.5 * sigma**2) * T) / (sigma * np.sqrt(T))
     d2_future = d1_future - sigma * np.sqrt(T)
 
     call_mask = (types == "Call")[:, np.newaxis]
 
     price_init = np.where(
         call_mask,
-        S0 * np.exp(-rfs * T) * norm.cdf(d1_init)
-        - K * np.exp(-rds * T) * norm.cdf(d2_init),
-        K * np.exp(-rds * T) * norm.cdf(-d2_init)
-        - S0 * np.exp(-rfs * T) * norm.cdf(-d1_init),
+        S0 * np.exp(-rfs * T) * norm.cdf(d1_init) - K * np.exp(-rds * T) * norm.cdf(d2_init),
+        K * np.exp(-rds * T) * norm.cdf(-d2_init) - S0 * np.exp(-rfs * T) * norm.cdf(-d1_init),
     )
 
     price_future = np.where(
@@ -95,10 +89,7 @@ def CF_var(returns, var_confidence, weights):
     s = skew(port_returns)
     k = kurtosis(port_returns)
     z_mod = (
-        z
-        + (z**2 - 1) * s / 6
-        + (z**3 - 3 * z) * (k - 3) / 24
-        - (2 * z**3 - 5 * z) * (s**2) / 36
+        z + (z**2 - 1) * s / 6 + (z**3 - 3 * z) * (k - 3) / 24 - (2 * z**3 - 5 * z) * (s**2) / 36
     )
     return -(port_returns.mean() + z_mod * port_returns.std(ddof=0))
 
@@ -123,9 +114,7 @@ def compute_historical_var(df_prices, df_quantities, confidence_level, nb_return
     returns = returns.dropna()
 
     latest_prices = df_prices.iloc[0]
-    weighted_returns = returns.multiply(latest_prices, axis=1).multiply(
-        df_quantities, axis=1
-    )
+    weighted_returns = returns.multiply(latest_prices, axis=1).multiply(df_quantities, axis=1)
     portfolio_returns = weighted_returns.sum(axis=1).iloc[:nb_returns]
 
     var = -np.percentile(portfolio_returns, (1 - confidence_level) * 100)
