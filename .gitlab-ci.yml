@@ -2,6 +2,8 @@ stages:
   - lint
   - test
 
+image: ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+
 variables:
   UV_CACHE_DIR: ".uv-cache"
 cache:
