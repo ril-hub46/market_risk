@@ -8,8 +8,9 @@ Requires-Dist: numpy>=2.3.5
 Requires-Dist: openpyxl>=3.1.5
 Requires-Dist: pandas>=2.3.3
 Requires-Dist: plotly>=6.5.0
-Requires-Dist: pydantic>=2.12.5
 Requires-Dist: pytest>=9.0.2
+Requires-Dist: ruff>=0.14.10
+Requires-Dist: scipy>=1.16.3
 Requires-Dist: streamlit>=1.52.2
 
 # value_at_risk
