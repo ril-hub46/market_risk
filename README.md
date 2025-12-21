@@ -4,14 +4,14 @@ This project was developed as part of my **Graduation Internship (PFE)** at the 
 
 The application provides an industrial-grade solution for calculating and monitoring the **Value-at-Risk ** of various portfolio (options, stocks, ...) using an interactive **Streamlit** dashboard.
 
-## 🚀 Key Features
+##  Key Features
 * **Risk Engine**: Monte Carlo simulations for VaR calculation and interest rate curve interpolation.
 * **Interactive Analytics**: Real-time risk visualization and portfolio return simulations using Plotly.
 * **Software Quality**: Rigorous unit testing and static code analysis to meet banking software standards.
 
 ---
 
-## 🛠 Tech Stack & Industrialization
+##  Tech Stack
 To ensure the project meets professional production standards, I implemented the following workflow:
 
 * **Package Management**: `uv` (modern, ultra-fast Python package manager).
@@ -33,11 +33,10 @@ First, clone the project to your local machine:
 git clone https://gitlab.com/Rilwanou/value_at_risk.git
 cd value_at_risk
 uv sync
-uv run streamlit run src/var/interface.py
+uv run streamlit run src/var/main.py
 ```
 ### 3. Run via Docker
-Build the Docker image
 ```bash
 docker build -t var-app-dev -f .devcontainer/Dockerfile .
-docker run -p 8501:8501 var-app-dev uv run streamlit run src/var/interface.py
+docker run -p 8501:8501 var-app-dev uv run streamlit run src/var/main.py
 ```
