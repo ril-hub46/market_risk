@@ -1,0 +1,22 @@
+stages:
+  -lint
+  -test
+
+variables:
+  UV_CACHE_DIR: ".uv-cache"
+cache:
+  paths:
+    - .uv-cache
+
+analysis:
+  stage: lint
+  script:
+    - uv sync
+    - uv run ruff check .
+    - uv run ruff format --check
+
+unittest:
+  stage: test
+  script:
+    - uv sync
+    - uv run pytest tests/test_model.py
