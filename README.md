@@ -30,17 +30,14 @@ Ensure you have [Git](https://git-scm.com/) and [uv](https://docs.astral.sh/uv/)
 ### 2. Clone the Repository
 First, clone the project to your local machine:
 ```bash
-git clone [https://gitlab.com/Rilwanou/value_at_risk.git](https://gitlab.com/Rilwanou/value_at_risk.git)
+git clone https://gitlab.com/Rilwanou/value_at_risk.git
 cd value_at_risk
 uv sync
 uv run streamlit run src/var/interface.py
-
-### Manual Launch via Docker## 🛠 Tech Stack & Industrialization
-
-To build and run the dashboard without local Python installation:
+```
+### 3. Run via Docker
+Build the Docker image
 ```bash
-# Build the Docker image
 docker build -t var-app-dev -f .devcontainer/Dockerfile .
-
-# Launch the Streamlit dashboard
 docker run -p 8501:8501 var-app-dev uv run streamlit run src/var/interface.py
+```
