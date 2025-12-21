@@ -455,7 +455,7 @@ def run_dashboard():
                                 line_dash="dash",
                                 line_color="red",
                                 line_width=2,
-                        annotation_text=f"VaR {int(confidence_level)}% = {var:} MAD",
+                                annotation_text=f"VaR {int(confidence_level)}% = {var:} MAD",
                                 annotation_position="right",
                             )
 
@@ -534,9 +534,9 @@ def run_dashboard():
 
                             pd.DataFrame(
                                 {
-                            "Simulated Returns GBM": st.session_state.last_var_results[
-                                "sim_porto"
-                                ]
+                                    "Simulated Returns GBM": st.session_state.last_var_results[
+                                        "sim_porto"
+                                    ]
                                 }
                             ).to_excel(
                                 writer, index=True, sheet_name="Simulated Returns"
@@ -569,9 +569,8 @@ def run_dashboard():
                 except Exception as e:
                     st.error(f"Export error: {e}")
 
-
     st.markdown("---")
     st.markdown(
-"<div style='text-align: center;'>VaR Calculator - Streamlit Version</div>",
-    unsafe_allow_html=True,
-)
+        "<div style='text-align: center;'>VaR Calculator - Streamlit Version</div>",
+        unsafe_allow_html=True,
+    )
