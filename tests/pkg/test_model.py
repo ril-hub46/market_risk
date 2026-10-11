@@ -3,7 +3,7 @@ from datetime import date
 import pandas as pd
 import pytest
 
-from var.model import find_nearest_date, get_rates
+from pkg.model import find_nearest_date, get_rates
 
 
 class TestVaREngine:

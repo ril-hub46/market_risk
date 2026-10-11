@@ -1,33 +1,39 @@
 from datetime import date
 from io import BytesIO
 
-import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
 
-from var.model import (
-    GBM,
-    CF_var,
+from web.api_client import (
     compute_historical_var,
-    compute_var,
+    compute_options_var,
+    compute_stocks_var,
 )
+
+
+def _preview(uploaded_file):
+    """Aperçu brut (non nettoyé) d'un fichier Excel uploadé, pour affichage seulement."""
+    try:
+        return pd.read_excel(uploaded_file)
+    except Exception:
+        return None
 
 
 def run_dashboard():
     st.set_page_config(page_title="Assets Pricing and VaR", page_icon="📊", layout="wide")
 
-    if "df_options" not in st.session_state:
-        st.session_state.df_options = None
-    if "df_stocks" not in st.session_state:
-        st.session_state.df_stocks = None
-    if "df_funds" not in st.session_state:
-        st.session_state.df_funds = None
-    if "df_qty" not in st.session_state:
-        st.session_state.df_qty = None
-    if "curve_map" not in st.session_state:
-        st.session_state.curve_map = {}
+    if "options_file" not in st.session_state:
+        st.session_state.options_file = None
+    if "stocks_file" not in st.session_state:
+        st.session_state.stocks_file = None
+    if "funds_file" not in st.session_state:
+        st.session_state.funds_file = None
+    if "qty_file" not in st.session_state:
+        st.session_state.qty_file = None
+    if "curve_files" not in st.session_state:
+        st.session_state.curve_files = {}
     if "last_calc_type" not in st.session_state:
         st.session_state.last_calc_type = None
     if "last_var_results" not in st.session_state:
@@ -65,13 +71,10 @@ def run_dashboard():
             )
 
             if uploaded_options:
-                try:
-                    st.session_state.df_options = pd.read_excel(uploaded_options)
-                    st.success("✅ Options imported successfully!")
-                    with st.expander("Data Preview"):
-                        st.dataframe(st.session_state.df_options, use_container_width=True)
-                except Exception as e:
-                    st.error(f"Import error: {e}")
+                st.session_state.options_file = uploaded_options
+                st.success("✅ Options imported successfully!")
+                with st.expander("Data Preview"):
+                    st.dataframe(_preview(uploaded_options), use_container_width=True)
 
             st.subheader("Stocks")
             uploaded_stocks = st.file_uploader(
@@ -79,21 +82,11 @@ def run_dashboard():
             )
 
             if uploaded_stocks:
-                try:
-                    df = pd.read_excel(uploaded_stocks)
-                    df.iloc[:, 0] = pd.to_datetime(df.iloc[:, 0], errors="coerce")
-                    df = df.dropna(subset=[df.columns[0]])
-                    df = df.sort_values(by=df.columns[0])
-                    df = df.set_index(df.columns[0])
-                    df = df.apply(pd.to_numeric, errors="coerce")
-
-                    st.session_state.df_stocks = df
-                    st.session_state.last_calc_type = "stocks"
-                    st.success("✅ Stocks imported successfully!")
-                    with st.expander("Data Preview"):
-                        st.dataframe(df, use_container_width=True)
-                except Exception as e:
-                    st.error(f"Import error: {e}")
+                st.session_state.stocks_file = uploaded_stocks
+                st.session_state.last_calc_type = "stocks"
+                st.success("✅ Stocks imported successfully!")
+                with st.expander("Data Preview"):
+                    st.dataframe(_preview(uploaded_stocks), use_container_width=True)
 
         with col2:
             st.subheader("OPCVM")
@@ -102,21 +95,11 @@ def run_dashboard():
             )
 
             if uploaded_funds:
-                try:
-                    df = pd.read_excel(uploaded_funds)
-                    df.iloc[:, 0] = pd.to_datetime(df.iloc[:, 0], errors="coerce")
-                    df = df.dropna(subset=[df.columns[0]])
-                    df = df.sort_values(by=df.columns[0], ascending=False)
-                    df.set_index(df.columns[0], inplace=True)
-                    df = df.apply(pd.to_numeric, errors="coerce")
-
-                    st.session_state.df_funds = df
-                    st.session_state.last_calc_type = "funds"
-                    st.success("✅ OPCVM imported successfully!")
-                    with st.expander("Data Preview"):
-                        st.dataframe(df, use_container_width=True)
-                except Exception as e:
-                    st.error(f"Import error: {e}")
+                st.session_state.funds_file = uploaded_funds
+                st.session_state.last_calc_type = "funds"
+                st.success("✅ OPCVM imported successfully!")
+                with st.expander("Data Preview"):
+                    st.dataframe(_preview(uploaded_funds), use_container_width=True)
 
             st.subheader("Quantities")
             uploaded_qty = st.file_uploader(
@@ -124,17 +107,10 @@ def run_dashboard():
             )
 
             if uploaded_qty:
-                try:
-                    df_qty = pd.read_excel(uploaded_qty, header=0)
-                    qty_series = df_qty.iloc[0]
-                    qty_series = pd.to_numeric(qty_series, errors="coerce")
-
-                    st.session_state.df_qty = qty_series
-                    st.success("✅ Quantities imported successfully!")
-                    with st.expander("Data Preview"):
-                        st.dataframe(qty_series, use_container_width=True)
-                except Exception as e:
-                    st.error(f"Import error: {e}")
+                st.session_state.qty_file = uploaded_qty
+                st.success("✅ Quantities imported successfully!")
+                with st.expander("Data Preview"):
+                    st.dataframe(_preview(uploaded_qty), use_container_width=True)
 
     with tab2:
         st.header("Interest Rate Curves")
@@ -148,15 +124,10 @@ def run_dashboard():
             )
 
             if uploaded_usd:
-                try:
-                    df = pd.read_excel(uploaded_usd)
-                    df["Date"] = pd.to_datetime(df["Date"])
-                    st.session_state.curve_map["USD"] = df
-                    st.success("✅ USD curve imported!")
-                    with st.expander("Preview"):
-                        st.dataframe(df, use_container_width=True)
-                except Exception as e:
-                    st.error(f"Error: {e}")
+                st.session_state.curve_files["USD"] = uploaded_usd
+                st.success("✅ USD curve imported!")
+                with st.expander("Preview"):
+                    st.dataframe(_preview(uploaded_usd), use_container_width=True)
 
         with col2:
             st.subheader("EUR")
@@ -165,15 +136,10 @@ def run_dashboard():
             )
 
             if uploaded_eur:
-                try:
-                    df = pd.read_excel(uploaded_eur)
-                    df["Date"] = pd.to_datetime(df["Date"])
-                    st.session_state.curve_map["EUR"] = df
-                    st.success("✅ EUR curve imported!")
-                    with st.expander("Preview"):
-                        st.dataframe(df, use_container_width=True)
-                except Exception as e:
-                    st.error(f"Error: {e}")
+                st.session_state.curve_files["EUR"] = uploaded_eur
+                st.success("✅ EUR curve imported!")
+                with st.expander("Preview"):
+                    st.dataframe(_preview(uploaded_eur), use_container_width=True)
 
         with col3:
             st.subheader("MAD")
@@ -182,15 +148,10 @@ def run_dashboard():
             )
 
             if uploaded_mad:
-                try:
-                    df = pd.read_excel(uploaded_mad)
-                    df["Date"] = pd.to_datetime(df["Date"])
-                    st.session_state.curve_map["MAD"] = df
-                    st.success("✅ MAD curve imported!")
-                    with st.expander("Preview"):
-                        st.dataframe(df, use_container_width=True)
-                except Exception as e:
-                    st.error(f"Error: {e}")
+                st.session_state.curve_files["MAD"] = uploaded_mad
+                st.success("✅ MAD curve imported!")
+                with st.expander("Preview"):
+                    st.dataframe(_preview(uploaded_mad), use_container_width=True)
 
     with tab3:
         st.header("Value at Risk Computation")
@@ -205,24 +166,27 @@ def run_dashboard():
             st.subheader(" Monte Carlo VaR for Options")
 
             if st.button(" Run Calculation", type="primary", use_container_width=True):
-                if st.session_state.df_options is None:
+                if st.session_state.options_file is None:
                     st.error("⚠️ Please import an options file first")
+                elif not {"USD", "EUR", "MAD"} <= st.session_state.curve_files.keys():
+                    st.error("⚠️ Please import USD, EUR and MAD yield curves first")
                 else:
                     try:
                         with st.spinner("Computing..."):
-                            var_value, pnl_total = compute_var(
-                                st.session_state.df_options,
+                            result = compute_options_var(
+                                st.session_state.options_file,
+                                st.session_state.curve_files["USD"],
+                                st.session_state.curve_files["EUR"],
+                                st.session_state.curve_files["MAD"],
                                 pricing_date,
-                                confidence_level / 100,
+                                confidence_level,
                                 n_simulations,
-                                st.session_state.curve_map,
                             )
+                            var_value = result["var_value"]
+                            pnl_total = result["pnl_total"]
 
                             st.session_state.last_calc_type = "options"
-                            st.session_state.last_var_results = {
-                                "var_value": var_value,
-                                "pnl_total": pnl_total,
-                            }
+                            st.session_state.last_var_results = result
 
                             st.success("Calculation completed!")
                             col1, col2 = st.columns([1, 2])
@@ -285,29 +249,23 @@ def run_dashboard():
             st.subheader(" Stocks VaR - Monte Carlo & Cornish-Fisher")
 
             if st.button(" Run Calculation", type="primary", use_container_width=True):
-                if st.session_state.df_stocks is None:
+                if st.session_state.stocks_file is None:
                     st.error(" Please import a stock portfolio first")
                 else:
                     try:
                         with st.spinner("Computing..."):
-                            df = st.session_state.df_stocks.copy()
-                            returns = np.log(df / df.shift(1)).dropna()
-                            n_assets = returns.shape[1]
-                            weights = np.ones(n_assets) / n_assets
-                            real_returns = returns.dot(weights)
-
-                            var_cf = CF_var(returns, 100 - confidence_level, weights)
-                            var_gbm, sim_porto = GBM(
-                                n_simulations, returns, weights, confidence_level
+                            result = compute_stocks_var(
+                                st.session_state.stocks_file,
+                                confidence_level,
+                                n_simulations,
                             )
+                            var_cf = result["var_cf"]
+                            var_gbm = result["var_gbm"]
+                            real_returns = result["real_returns"]
+                            sim_porto = result["sim_porto"]
 
                             st.session_state.last_calc_type = "stocks"
-                            st.session_state.last_var_results = {
-                                "var_cf": var_cf,
-                                "var_gbm": var_gbm,
-                                "real_returns": real_returns,
-                                "sim_porto": sim_porto,
-                            }
+                            st.session_state.last_var_results = result
 
                             st.success("Calculation completed!")
 
@@ -387,31 +345,30 @@ def run_dashboard():
             st.subheader("Historical VaR")
 
             if st.button("Run Calculation", type="primary", use_container_width=True):
-                if st.session_state.df_qty is None:
+                if st.session_state.qty_file is None:
                     st.warning(" Please import quantities")
                 elif st.session_state.last_calc_type not in ["funds", "stocks"]:
                     st.error("Please import a portfolio first (Mutual Funds or Stocks)")
                 else:
                     try:
                         with st.spinner("Computing..."):
-                            if st.session_state.last_calc_type == "funds":
-                                df = st.session_state.df_funds.copy()
-                            else:
-                                df = st.session_state.df_stocks.copy()
-
-                            qty = st.session_state.df_qty.copy()
-
-                            var, port_returns = compute_historical_var(
-                                df, qty, confidence_level / 100, nb_returns
+                            portfolio_file = (
+                                st.session_state.funds_file
+                                if st.session_state.last_calc_type == "funds"
+                                else st.session_state.stocks_file
                             )
-                            returns = (df.pct_change().dropna() * qty).sum(axis=1).tail(nb_returns)
-                            var = abs(np.percentile(returns, (1 - confidence_level / 100) * 100))
 
-                            st.session_state.last_var_results = {
-                                "var_histo": var,
-                                "pnl": returns.values,
-                                "dates": returns.index,
-                            }
+                            result = compute_historical_var(
+                                portfolio_file,
+                                st.session_state.qty_file,
+                                confidence_level,
+                                nb_returns,
+                            )
+                            var = result["var_histo"]
+                            dates = result["dates"]
+                            pnl = result["pnl"]
+
+                            st.session_state.last_var_results = result
 
                             st.success("Calculation completed!")
 
@@ -424,8 +381,8 @@ def run_dashboard():
 
                             fig.add_trace(
                                 go.Scatter(
-                                    x=returns.index,
-                                    y=returns.values,
+                                    x=dates,
+                                    y=pnl,
                                     mode="lines",
                                     name="Weighted P&L",
                                     line=dict(color="steelblue", width=2),
@@ -495,11 +452,12 @@ def run_dashboard():
 
                             pd.DataFrame(
                                 {
+                                    "Date": st.session_state.last_var_results["real_returns_dates"],
                                     "Actual Returns": st.session_state.last_var_results[
                                         "real_returns"
-                                    ]
+                                    ],
                                 }
-                            ).to_excel(writer, index=True, sheet_name="Actual Returns")
+                            ).to_excel(writer, index=False, sheet_name="Actual Returns")
 
                             pd.DataFrame(
                                 {

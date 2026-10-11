@@ -22,6 +22,34 @@ To ensure the project meets professional production standards, I implemented the
 
 ---
 
+##  Project Structure
+
+The project is split into three independent layers:
+
+```
+value_at_risk/
+├── api/            # FastAPI backend — receives raw Excel uploads, parses them
+│   ├── main.py     #   (via pkg.data_processing) and runs the VaR engine (pkg.model)
+│   ├── routers/    # /var/options, /var/stocks, /var/historical endpoints
+│   └── schemas.py  # Pydantic response models
+│
+├── pkg/            # Pure calculation logic — no UI/web framework dependency
+│   ├── model.py            # Monte Carlo, Cornish-Fisher, GBM, historical VaR
+│   ├── data_processing.py  # Excel parsing/cleaning (options, prices, curves, quantities)
+│   └── data/
+│       ├── raw/
+│       └── processed/
+│
+├── web/            # Streamlit frontend — UI only, talks to the API over HTTP
+│   ├── main.py
+│   ├── interface.py
+│   └── api_client.py
+│
+└── tests/
+    ├── pkg/
+    └── api/
+```
+
 ##  Installation & Execution
 
 ### 1. Prerequisites
@@ -33,10 +61,25 @@ First, clone the project to your local machine:
 git clone https://gitlab.com/Rilwanou/value_at_risk.git
 cd value_at_risk
 uv sync
-uv run streamlit run src/var/main.py
 ```
-### 3. Run via Docker
+
+### 3. Run the app
+Two processes are needed: the API (backend) and the Streamlit dashboard (frontend).
+
+```bash
+# Terminal 1 — backend
+uv run uvicorn api.main:app --reload
+
+# Terminal 2 — frontend (talks to the API on http://localhost:8000 by default,
+# override with the API_BASE_URL env var)
+uv run streamlit run web/main.py
+```
+
+### 4. Run via Docker
+The devcontainer image ships the environment only (no default command). Run both
+processes inside it:
 ```bash
 docker build -t var-app-dev -f .devcontainer/Dockerfile .
-docker run -p 8501:8501 var-app-dev uv run streamlit run src/var/main.py
+docker run -p 8501:8501 -p 8000:8000 var-app-dev \
+  bash -c "uv run uvicorn api.main:app --host 0.0.0.0 & uv run streamlit run web/main.py --server.address 0.0.0.0"
 ```

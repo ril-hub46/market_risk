@@ -1,4 +1,4 @@
-from interface import run_dashboard
+from web.interface import run_dashboard
 
 
 def main():
